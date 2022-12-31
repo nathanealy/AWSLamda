@@ -34,7 +34,7 @@ def lambda_handler(event, context):
             format = "%m"
             month = now.strftime(format)
 
-            cursor.execute("select date, event, link, link_title from history where date like %s order by date asc", ("%-" + month + "-%"))
+            cursor.execute("select date, dateandtime, title, link, description from events order by date asc")
             event_list = list(cursor.fetchall())
 
         if len(event_list) > 0:         
