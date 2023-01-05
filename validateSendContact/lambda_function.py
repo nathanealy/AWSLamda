@@ -55,16 +55,30 @@ def lambda_handler(event, context):
        
 def validatehCaptcha(hrepsonse):
     status = "OK"
-
+    pool = ""
+    url = ""
+    message = ""
+    
+    data = {'secret': config.hcaptcha_secret, 'respone': hrepsonse}
     http = urllib3.PoolManager()
-    
-    
-    
+
+    try:
+        response = http.request_encode_body('POST', config.hcaptcha_address, headers={'Content-Type':'application/x-www-form-urlencoded'}, body=data)
+        logger.info(response)  
+        response_json = json.dump(response.content)
+        logger.info(response_json)          
+    except urllib3.exceptions.ResponseError as ex:
+        status = "ERROR"        
+        logger.error(ex)
+    except urllib3.exceptions.ResponseErrorRequestError(pool, url, message):   
+        status = "ERROR"            
+        logger.error(pool)
+        logger.error(url)
+        logger.error(message)
+        
     return status
 
 def sendMessage(address, message):
     status = "OK"
-    
-    
-    
+
     return status
