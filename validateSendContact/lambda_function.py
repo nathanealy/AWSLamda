@@ -1,6 +1,6 @@
 import json
 import logging
-import urllib3
+import requests
 import config
 
 # log settings
@@ -10,17 +10,11 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     # TODO implement
 
-    logger.info(event)
-
     try:
         emailaddress = event['emailaddress']
         messagebody = event['messagebody']
         hcaptcharepsonse = event['hcaptcharepsonse']
-        
-        logger.info(emailaddress)
-        logger.info(messagebody)
-        logger.info(hcaptcharepsonse)    
-        
+
         if len(emailaddress) > 0 and len(messagebody) > 0 and len(hcaptcharepsonse) > 0:
 
             if validatehCaptcha(hcaptcharepsonse) == "OK":
@@ -32,8 +26,9 @@ def lambda_handler(event, context):
                         'body': json.dumps('OK')
                     }      
                 else:
+                    logger.info("hCaptcha not validated")
                     return {
-                        'statusCode': 500,
+                        'statusCode': 2,
                         'body': json.dumps('ERROR')
                     }  
             else:
@@ -46,8 +41,8 @@ def lambda_handler(event, context):
                 'statusCode': 204,
                 'body': json.dumps('NULL parameter(s)')
             }             
-    except:
-        logger.error("ERROR: Getting parameters")
+    except Exception as e:
+        logger.error(e)
         return {
             'statusCode': 500,
             'body': json.dumps('Error')
@@ -55,26 +50,25 @@ def lambda_handler(event, context):
        
 def validatehCaptcha(hrepsonse):
     status = "OK"
-    pool = ""
-    url = ""
-    message = ""
-    
-    data = {'secret': config.hcaptcha_secret, 'respone': hrepsonse}
-    http = urllib3.PoolManager()
 
     try:
-        response = http.request_encode_body('POST', config.hcaptcha_address, headers={'Content-Type':'application/x-www-form-urlencoded'}, body=data)
-        logger.info(response)  
-        response_json = json.dump(response.content)
-        logger.info(response_json)          
-    except urllib3.exceptions.ResponseError as ex:
-        status = "ERROR"        
-        logger.error(ex)
-    except urllib3.exceptions.ResponseErrorRequestError(pool, url, message):   
-        status = "ERROR"            
-        logger.error(pool)
-        logger.error(url)
-        logger.error(message)
+        logger.info('A ' + config.hcaptcha_address) 
+        logger.info('R ' + hrepsonse) 
+        logger.info('S ' + config.hcaptcha_secret) 
+         
+        response = requests.post(config.hcaptcha_address,data={'secret': config.hcaptcha_secret, 'response': hrepsonse},headers={'Content-Type':'application/x-www-form-urlencoded'})
+
+        logger.info(response.content)  
+        data = json.loads(response.content)
+        success = data['success']
+        logger.info(success)     
+        
+        if success == False:
+            status = "ERROR"
+        
+    except Exception as e:
+        status = "ERROR" 
+        logger.error(e)
         
     return status
 
