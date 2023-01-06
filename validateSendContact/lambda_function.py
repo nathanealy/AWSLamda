@@ -2,6 +2,8 @@ import json
 import logging
 import requests
 import config
+import boto3
+from botocore.exceptions import ClientError
 
 # log settings
 logger = logging.getLogger()
@@ -26,7 +28,7 @@ def lambda_handler(event, context):
                         'body': json.dumps('OK')
                     }      
                 else:
-                    logger.info("hCaptcha not validated")
+                    logger.info("Message not sent")
                     return {
                         'statusCode': 2,
                         'body': json.dumps('ERROR')
@@ -74,5 +76,46 @@ def validatehCaptcha(hrepsonse):
 
 def sendMessage(address, message):
     status = "OK"
-
+    
+    logger.info(address)
+    logger.info(message)
+    
+    full_message_text = (address + '\r\n' + message)
+    
+    full_message_html = ("<html><head></head><body><h1>Message From WJR Site</h1><p>{b1}</p><p>{b2}</p></body></html>".format(b1=address, b2=message))
+    
+    destination = {
+        'ToAddresses': [
+            config.ses_to_email,
+        ],
+    }
+    
+    smtpmessage = {
+        'Body' : { 
+            'Html': {
+                'Charset': 'UTF-8',
+                'Data': full_message_html,
+            },
+            'Text': {
+                'Charset': 'UTF-8',
+                'Data': full_message_text,                
+            },
+        },
+        'Subject': {
+            'Charset': 'UTF-8',
+            'Data': 'Message From WJR Site',
+        }
+    }
+    
+    client = boto3.client('ses', region_name=config.aws_region)
+    
+    try:
+        response = client.send_email(Destination=destination, Message=smtpmessage, Source=config.ses_from_email)
+    except ClientError as e:
+        status = "ERROR" 
+        logger.error(e)          
+    except Exception as e:
+        status = "ERROR" 
+        logger.error(e)       
+    
     return status
