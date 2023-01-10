@@ -30,8 +30,8 @@ def lambda_handler(event, context):
 
     try:
         with connection.cursor() as cursor:
-  
-            cursor.execute("select date, dateandtime, title, link, description from events order by date asc")
+
+            cursor.execute("select feature_type, feature_geometry_type, feature_geometry_longitude, feature_properties_title, feature_properties_description, conflict_type from conflicts")
             event_list = list(cursor.fetchall())
 
         if len(event_list) > 0:         
