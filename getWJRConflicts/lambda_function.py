@@ -31,13 +31,38 @@ def lambda_handler(event, context):
     try:
         with connection.cursor() as cursor:
 
-            cursor.execute("select feature_type, feature_geometry_type, feature_geometry_longitude, feature_properties_title, feature_properties_description, conflict_type from conflicts")
-            event_list = list(cursor.fetchall())
+            cursor.execute("select feature_type, feature_geometry_type, feature_geometry_longitude, feature_geometry_latitude, feature_properties_title, feature_properties_description from conflicts")
+            records = cursor.fetchall()
+            
+            features = []
+            
+            for row in records:
+                feature = {
+                    "type": row[0],
+                    "geometry": {
+                        "type": row[1],
+                        "coordinates": [row[1], row[2]]
+                    },
+                    "properties": {
+                        "title": row[3],
+                        "description": row[4]
+                    }
+                }
+            
+                features.append(feature)
+            
+            geojson = {
+                "type": "FeatureCollection",
+                "features" : features
+            }
+            
+            
+            cursor.close()
 
-        if len(event_list) > 0:         
+        if len(features) > 0:         
             return {
                 'statusCode': 200,
-                'body': json.dumps(event_list, default=str)
+                'body': json.dumps(geojson, default=str)
             }
         else: 
             return {
