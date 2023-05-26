@@ -82,7 +82,7 @@ def sendMessage(address, message):
     
     full_message_text = (address + '\r\n' + message)
     
-    full_message_html = ("<html><head></head><body><h1>Message From WJR Site</h1><p>{b1}</p><p>{b2}</p></body></html>".format(b1=address, b2=message))
+    full_message_html = ("<html><head></head><body><h1>Message From a Site</h1><p>{b1}</p><p>{b2}</p></body></html>".format(b1=address, b2=message))
     
     destination = {
         'ToAddresses': [
