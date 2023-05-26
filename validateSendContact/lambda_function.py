@@ -103,7 +103,7 @@ def sendMessage(address, message):
         },
         'Subject': {
             'Charset': 'UTF-8',
-            'Data': 'Message From WJR Site',
+            'Data': 'Message From a Site',
         }
     }
     
