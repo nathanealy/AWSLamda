@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     try:
         with connection.cursor() as cursor:
   
-            cursor.execute("select gig_date, gig_title, gig_description, gig_link, gig_location, gig_price from gigs order by gig_date asc")
+            cursor.execute("select gig_date, gig_title, gig_description, gig_link, gig_location, gig_price from gigs where gig_date > '% s' order by gig_date asc" % datetime.now())
             event_list = list(cursor.fetchall())
 
         if len(event_list) > 0:         
