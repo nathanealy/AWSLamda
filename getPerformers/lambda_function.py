@@ -3,6 +3,7 @@ import json
 import rds_config
 import pymysql
 import logging
+import base64
 from datetime import datetime
 
 # rds settings
@@ -22,7 +23,6 @@ try:
     connection = pymysql.connect(host=rds_host, user=rds_username, passwd=rds_password, db=rds_dbname, connect_timeout=5, port=rds_port)
     logger.info("SUCCESS: Database connection succeeded")    
 except pymysql.MySQLError as e:
-    logger.error("ERROR: Could not connect to database")
     logger.error(e)
 
 def lambda_handler(event, context):
@@ -33,17 +33,30 @@ def lambda_handler(event, context):
   
             cursor.execute("SELECT biography, picture, name FROM tsr_schema.performers where active = 1;")
             performer_list = list(cursor.fetchall())
-
-        if len(performer_list) > 0:         
-            return {
-                'statusCode': 200,
-                'body': json.dumps(performer_list, default=str)
-            }
-        else: 
-            return {
-                'statusCode': 204,
-                'body': json.dumps('No data')
-            }            
+            converted_list = list()
+         
+            if len(performer_list) > 0:      
+                for pt in performer_list:
+                    pl = list(pt)
+                    pl_bytes =  base64.b64encode(pt[1])
+                    
+                    base64_string = pl_bytes.decode()
+                    pl[1] = base64_string
+                    
+                    logger.info(pl)
+                    converted_list.append(pl)
+                    
+                logger.info(converted_list)
+                    
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps(converted_list, default=str)
+                }
+            else: 
+                return {
+                    'statusCode': 204,
+                    'body': json.dumps('No data')
+                }            
     except pymysql.MySQLError as e:
         logger.error("ERROR: fetching")
         logger.error(e)
